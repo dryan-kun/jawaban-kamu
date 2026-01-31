@@ -23,6 +23,9 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   animation: fadeIn 1s ease;
+  width: 90%;
+  max-width: 400px;
+  min-height: 220px;
 }
 
 h1 {
@@ -67,21 +70,22 @@ button:hover {
   position: fixed;
   bottom: 0;
   right: 15px;
-  width: 180px;      /* ukuran utama */
-  max-width: 40vw;   /* biar ga kegedean di HP kecil */
-  pointer-events: none; /* biar ga nutup tombol */
-}
-
-@keyframes bearDance {
-  from { transform: translateY(0px) rotate(-5deg); }
-  to { transform: translateY(-15px) rotate(5deg); }
+  width: 200px;
+  max-width: 45vw;
+  pointer-events: none;
 }
 </style>
 </head>
 
 <body>
 
-<div class="slide">
+<audio id="clickSound" src="klik.mp3" preload="auto"></audio>
+<audio id="noSound" src="gbs.mp3" preload="auto"></audio>
+<audio id="yaySound" src="yay.mp3" preload="auto"></audio>
+
+<img src="bear.gif" class="bear">
+
+<div class="slide" id="slideBox">
   <h1 id="text">Selamat datang cintakuu ❤️</h1>
   <div id="buttons">
     <button onclick="next()">Next</button>
@@ -91,6 +95,30 @@ button:hover {
 <script>
 let step = 0;
 let responses = [];
+
+function playClick() {
+  const s = document.getElementById("clickSound");
+  s.currentTime = 0;
+  s.play();
+}
+
+function playNoSound() {
+  const s = document.getElementById("noSound");
+  s.currentTime = 0;
+  s.play();
+}
+
+function playYaySound() {
+  const s = document.getElementById("yaySound");
+  s.currentTime = 0;
+  s.play();
+}
+
+document.addEventListener("click", function(e) {
+  if (e.target.tagName === "BUTTON") {
+    playClick();
+  }
+});
 
 function next(answerText = null) {
   if (answerText) responses.push(answerText);
@@ -121,42 +149,54 @@ function next(answerText = null) {
     text.innerHTML = "Mau cintai aku sekali lagi?";
     buttons.innerHTML = `
       <button onclick="next('Cintai lagi: Mau')">Mau</button>
-      <button onclick="next('Cintai lagi: Tidak')">Tidak</button>`;
+      <button id="noBtn1">Tidak</button>`;
+    activateRunawayButton("noBtn1", "Cintai lagi: Tidak");
   }
   else if (step === 5) {
     text.innerHTML = "Kamu masih mau sama aku?";
     buttons.innerHTML = `
       <button onclick="next('Masih mau: Mau')">Mau</button>
-      <button onclick="next('Masih mau: Engga')">Engga</button>`;
+      <button id="noBtn2">Engga</button>`;
+    activateRunawayButton("noBtn2", "Masih mau: Engga");
   }
   else if (step === 6) {
     text.innerHTML = "Udah yakin dengan semua itu?";
     buttons.innerHTML = `
-      <button onclick="next('Yakin: Iya banget')">Iyaa aku sangat yakin sayangg</button>`;
+      <button onclick="playYaySound(); next('Yakin: Iya banget')">Iyaa aku sangat yakin sayangg</button>`;
   }
   else {
     text.innerHTML = "Terimakasih telah menjawab ❤️";
     buttons.innerHTML = "";
-    showBear();
     sendEmail();
   }
 }
 
-function sendEmail() {
-  emailjs.init("62lI_6oEr5dhQw33V");
+function activateRunawayButton(id, responseText) {
+  const btn = document.getElementById(id);
+  const box = document.getElementById("slideBox");
 
-  emailjs.send("service_utzn7ua", "template_p4wklzb", {
-    message: responses.join("\n")
-  })
-  .then(() => console.log("Email terkirim"))
-  .catch(err => console.log("Email gagal:", err));
+  btn.style.position = "absolute";
+
+  btn.addEventListener("click", () => {
+    playNoSound();
+    responses.push(responseText);
+
+    const maxX = box.clientWidth - btn.offsetWidth - 10;
+    const maxY = box.clientHeight - btn.offsetHeight - 10;
+
+    const randomX = Math.random() * maxX;
+    const randomY = Math.random() * maxY;
+
+    btn.style.left = randomX + "px";
+    btn.style.top = randomY + "px";
+  });
 }
 
-function showBear() {
-  const bear = document.createElement("img");
-  bear.src = "bear.gif";
-  bear.className = "bear";
-  document.body.appendChild(bear);
+function sendEmail() {
+  emailjs.init("62lI_6oEr5dhQw33V");
+  emailjs.send("service_utzn7ua", "template_p4wklzb", {
+    message: responses.join("\n")
+  });
 }
 
 setInterval(() => {
@@ -170,7 +210,6 @@ setInterval(() => {
   setTimeout(() => heart.remove(), 6000);
 }, 500);
 </script>
-<img src="bear.gif" class="bear">
-}
+
 </body>
 </html>
